@@ -167,38 +167,24 @@ public interface DataType<T> {
         }
 
         @Override
-        public @Nullable String read(@NotNull ByteBuffer buffer) {
-            for (int i = 1; i < 4; i++) {
-                try {
-                    byte[] varIntData = new byte[i];
-                    ByteBuffer byteBuffer = ByteBuffer.wrap(buffer.array());
-                    byteBuffer.get(varIntData, 0, i);
-                    int lengthValue = DataType.VAR_INT.read(ByteBuffer.wrap(varIntData));
-                    byte[] stringData = new byte[buffer.array().length - i];
-                    byteBuffer.get(i, stringData);
-                    if (lengthValue == stringData.length) {
-                        return new String(stringData);
-                    }
-                } catch (BufferUnderflowException ignored) {
-                }
-            }
-            return null;
+        public @NotNull String read(@NotNull ByteBuffer buffer) {
+            int lengthValue = DataType.VAR_INT.read(buffer);
+            byte[] stringBytes = new byte[lengthValue];
+            buffer.get(stringBytes);
+            return new String(stringBytes);
         }
     };
     //chat - nbt
     DataType<JsonElement> JSON = new DataType<>() {
         @Override
         public ByteBuffer write(@NotNull JsonElement jsonElement) {
-            String s = jsonElement.toString();
-            return DataType.STRING.write(String.copyValueOf(s.toCharArray(), 0, Math.min(s.length(), JSON_MAX_LENGTH)));
+            System.out.println(jsonElement.toString());
+            return DataType.STRING.write(jsonElement.toString());
         }
 
         @Override
         public JsonElement read(ByteBuffer buffer) {
             String value = DataType.STRING.read(buffer);
-            if (value == null) {
-                throw new IllegalStateException("Json string cannot be null.");
-            }
             JsonReader jsonReader = new JsonReader(new StringReader(value));
             jsonReader.setLenient(true);
             return JsonParser.parseReader(jsonReader);
@@ -304,9 +290,7 @@ public interface DataType<T> {
         @Override
         public @NotNull UUID read(@NotNull ByteBuffer buffer) {
             long mostSignificantBits = buffer.getLong();
-            System.out.println(mostSignificantBits);
             long leastSignificantBits = buffer.getLong();
-            System.out.println(leastSignificantBits);
             return new UUID(mostSignificantBits, leastSignificantBits);
         }
     };
@@ -340,4 +324,7 @@ public interface DataType<T> {
 
     T read(ByteBuffer buffer);
 
+    default T read(ByteBuffer buffer, int size){
+        return null;
+    }
 }

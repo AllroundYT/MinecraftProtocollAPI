@@ -1,4 +1,4 @@
-package de.allround.misc;
+package de.allround.future;
 
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -7,9 +7,55 @@ import java.util.Optional;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 public interface Future<T>{
 
+    static <T> @NotNull Future<T> streamAsyncSupply(Supplier<T> consumer) {
+        Future<T> future = new FutureImpl<>();
+        StreamFutureImpl.EXECUTOR_SERVICE.submit(() -> {
+            try {
+                future.succeed(consumer.get());
+            }catch (Throwable throwable){
+                future.fail(throwable);
+            }
+        });
+        return future;
+    }
+
+    static <T> @NotNull Future<T> streamAsyncSupply(Function<Future<T>, T> consumer) {
+        Future<T> future = new FutureImpl<>();
+        StreamFutureImpl.EXECUTOR_SERVICE.submit(() -> {
+            try {
+                future.succeed(consumer.apply(future));
+            }catch (Throwable throwable){
+                future.fail(throwable);
+            }
+        });
+        return future;
+    }
+
+    static <T> @NotNull Future<T> streamFuture(Runnable runnable) {
+        Future<T> future = new FutureImpl<>();
+        StreamFutureImpl.EXECUTOR_SERVICE.submit(() -> {
+            try {
+                runnable.run();
+                future.succeed();
+            } catch (Exception e){
+                future.fail(e);
+            }
+        });
+        return future;
+    }
+
+    static <T> @NotNull Future<T> streamFuture(Consumer<Promise<T>> consumer) {
+        Future<T> future = new FutureImpl<>();
+        StreamFutureImpl.EXECUTOR_SERVICE.submit(() -> {
+            Promise<T> promise = new PromiseImpl<>(future);
+            consumer.accept(promise);
+        });
+        return future;
+    }
 
 
     static <T> @NotNull Future<T> asyncSupply(Supplier<T> consumer) {
@@ -79,6 +125,11 @@ public interface Future<T>{
         return new FutureImpl<>();
     }
 
+    @Contract(" -> new")
+    static <T> @NotNull Future<T> createStream(){
+        return new StreamFutureImpl<>();
+    }
+
     static void cancelAll(){
         FutureImpl.EXECUTOR_SERVICE.shutdownNow();
     }
@@ -97,9 +148,9 @@ public interface Future<T>{
 
     Optional<Throwable> getCause();
 
-    void await();
+    void await() throws Exception;
 
-    //todo <MT> Future<MT> map(Function<T, MT> mappingFunction);
+    <MT> Future<MT> map(Function<T, MT> mappingFunction);
 
     CompletionStage<T> toCompletionStage();
 

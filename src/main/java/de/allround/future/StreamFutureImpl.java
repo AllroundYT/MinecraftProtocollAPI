@@ -1,16 +1,14 @@
-package de.allround.misc;
+package de.allround.future;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
-class FutureImpl<T> implements Future<T> {
+class StreamFutureImpl<T> implements Future<T> {
 
     static final ExecutorService EXECUTOR_SERVICE;
 
@@ -26,7 +24,7 @@ class FutureImpl<T> implements Future<T> {
     private T result;
     private Throwable cause;
 
-    FutureImpl() {
+    StreamFutureImpl() {
     }
 
     public boolean isDone() {
@@ -68,8 +66,17 @@ class FutureImpl<T> implements Future<T> {
     }
 
     @Override
-    public void await() {
-        toCompletionStage().toCompletableFuture().join();
+    public void await() throws Exception {
+        //todo await
+        toCompletionStage().toCompletableFuture().get();
+    }
+
+    @Override
+    public <MT> Future<MT> map(Function<T, MT> mappingFunction) {
+        StreamFutureImpl<MT> future = new StreamFutureImpl<>();
+        onSuccess(t -> future.succeed(mappingFunction.apply(t)));
+        onFailure(future::fail);
+        return future;
     }
 
     @Override
@@ -88,24 +95,22 @@ class FutureImpl<T> implements Future<T> {
 
     @Override
     public synchronized Future<T> succeed(T result) {
-        if (isDone()) return this;
         this.result = result;
         done = true;
-        successConsumers.forEach(consumer -> consumer.accept(result));
+        EXECUTOR_SERVICE.submit(() -> successConsumers.forEach(consumer -> consumer.accept(result)));
         if (result != null) {
-            nonNullValueConsumers.forEach(consumer -> consumer.accept(result));
+            EXECUTOR_SERVICE.submit(() -> nonNullValueConsumers.forEach(consumer -> consumer.accept(result)));
         } else {
-            nullValueRunnables.forEach(Runnable::run);
+            EXECUTOR_SERVICE.submit(() -> nullValueRunnables.forEach(Runnable::run));
         }
         return this;
     }
 
     @Override
     public synchronized Future<T> fail(Throwable throwable) {
-        if (isDone()) return this;
         this.cause = throwable;
         done = true;
-        failConsumers.forEach(throwableConsumer -> throwableConsumer.accept(throwable));
+        EXECUTOR_SERVICE.submit(() -> failConsumers.forEach(throwableConsumer -> throwableConsumer.accept(throwable)));
         return this;
     }
 }

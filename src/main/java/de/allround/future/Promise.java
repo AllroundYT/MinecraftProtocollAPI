@@ -1,4 +1,4 @@
-package de.allround.misc;
+package de.allround.future;
 
 public interface Promise<T> {
     void complete(T result);

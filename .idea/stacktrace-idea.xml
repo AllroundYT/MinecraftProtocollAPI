@@ -13,10 +13,12 @@
     <option name="packages">
       <set>
         <option value="de.allround" />
+        <option value="de.allround.future" />
         <option value="de.allround.misc" />
         <option value="de.allround.network" />
         <option value="de.allround.player" />
         <option value="de.allround.protocol" />
+        <option value="net.mineempires.misc" />
       </set>
     </option>
   </component>

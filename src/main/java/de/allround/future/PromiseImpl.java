@@ -1,4 +1,4 @@
-package de.allround.misc;
+package de.allround.future;
 
 class PromiseImpl<T> implements Promise<T> {
     private final Future<T> future;
