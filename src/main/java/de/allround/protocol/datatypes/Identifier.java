@@ -8,12 +8,13 @@ public class Identifier {
     public static final String VALUE_REGEX;
 
     static {
-        NAMESPACE_REGEX = "^[a-z0-9\\._-]+$";
-        VALUE_REGEX = "^[a-z0-9\\._-]+$";
+        NAMESPACE_REGEX = "[a-z0-9.-_]";
+        VALUE_REGEX = "[a-z0-9.-_/]";
     }
 
     private final String namespace;
     private final String value;
+
     private Identifier(String namespace, String value) {
         this.namespace = namespace;
         this.value = value;
@@ -24,6 +25,7 @@ public class Identifier {
         return of(identifier.split(":")[0], identifier.split(":")[1]);
     }
 
+
     @Contract("_ -> new")
     public static @NotNull Identifier minecraft(@NotNull String value) {
         return of("minecraft", value);
@@ -32,7 +34,7 @@ public class Identifier {
     @Contract("_, _ -> new")
     public static @NotNull Identifier of(@NotNull String namespace, String value) {
         if (!namespace.matches(NAMESPACE_REGEX) || !value.matches(VALUE_REGEX)) {
-            throw new IllegalStateException("Identifiers can only contain \"abcdefghijklmnopqrstuvwxyz0123456789._-\"");
+            throw new IllegalStateException("Identifiers has to match \"" + NAMESPACE_REGEX + ":" + VALUE_REGEX+"\"");
         }
 
         return new Identifier(namespace, value);

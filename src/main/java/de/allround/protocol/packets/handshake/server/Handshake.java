@@ -1,19 +1,18 @@
 package de.allround.protocol.packets.handshake.server;
 
-import de.allround.misc.ByteBufferHelper;
-import de.allround.player.PlayerConnection;
+import de.allround.protocol.ConnectionState;
 import de.allround.protocol.datatypes.DataType;
-import de.allround.protocol.packets.Packet;
+import de.allround.protocol.packets.ReadablePacket;
 
 import java.nio.ByteBuffer;
 
-public class Handshake implements Packet {
+public class Handshake implements ReadablePacket {
     private int protocolVersion;
     private String serverAddress;
     private short serverPort;
-    private PlayerConnection.ConnectionState nextState;
+    private ConnectionState nextState;
 
-    public PlayerConnection.ConnectionState getNextState() {
+    public ConnectionState getNextState() {
         return nextState;
     }
 
@@ -35,21 +34,11 @@ public class Handshake implements Packet {
     }
 
     @Override
-    public ByteBuffer writeDataFields() {
-        return ByteBufferHelper.combine(
-                DataType.VAR_INT.write(protocolVersion),
-                DataType.STRING.write(serverAddress),
-                DataType.SHORT.write(serverPort),
-                DataType.VAR_INT.write(nextState.ordinal())
-        );
-    }
-
-    @Override
-    public Handshake readDataFields(ByteBuffer buffer) {
+    public Handshake read(ByteBuffer buffer) {
         protocolVersion = DataType.VAR_INT.read(buffer);
         serverAddress = DataType.STRING.read(buffer);
         serverPort = DataType.SHORT.read(buffer);
-        nextState = PlayerConnection.ConnectionState.fromOrdinal(DataType.VAR_INT.read(buffer));
+        nextState = ConnectionState.fromOrdinal(DataType.VAR_INT.read(buffer));
         return this;
     }
 }

@@ -1,11 +1,11 @@
 package de.allround.protocol.packets.status.server;
 
 import de.allround.protocol.datatypes.DataType;
-import de.allround.protocol.packets.Packet;
+import de.allround.protocol.packets.ReadablePacket;
 
 import java.nio.ByteBuffer;
 
-public class PingRequest implements Packet {
+public class PingRequest implements ReadablePacket {
     private long payload;
 
     public long getPayload() {
@@ -17,13 +17,9 @@ public class PingRequest implements Packet {
         return 0x01;
     }
 
-    @Override
-    public ByteBuffer writeDataFields() {
-        return DataType.LONG.write(payload);
-    }
 
     @Override
-    public Packet readDataFields(ByteBuffer buffer) {
+    public ReadablePacket read(ByteBuffer buffer) {
         payload = DataType.LONG.read(buffer);
         return this;
     }

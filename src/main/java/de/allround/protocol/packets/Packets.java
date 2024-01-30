@@ -1,23 +1,24 @@
 package de.allround.protocol.packets;
 
+import de.allround.protocol.ConnectionState;
 import de.allround.protocol.packets.handshake.server.Handshake;
 import de.allround.protocol.packets.status.client.PingResponse;
 import de.allround.protocol.packets.status.client.StatusResponse;
 import de.allround.protocol.packets.status.server.PingRequest;
 import de.allround.protocol.packets.status.server.StatusRequest;
+import org.jetbrains.annotations.NotNull;
 
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class Packets {
     public static final class Serverbound {
-        private static final Map<Integer, Supplier<Packet>> HANDSHAKE = new HashMap<>();
-        private static final Map<Integer, Supplier<Packet>> STATUS = new HashMap<>();
-        private static final Map<Integer, Supplier<Packet>> LOGIN = new HashMap<>();
-        private static final Map<Integer, Supplier<Packet>> PLAY = new HashMap<>();
+        private static final Map<Integer, Supplier<ReadablePacket>> HANDSHAKE = new HashMap<>();
+        private static final Map<Integer, Supplier<ReadablePacket>> STATUS = new HashMap<>();
+        private static final Map<Integer, Supplier<ReadablePacket>> LOGIN = new HashMap<>();
+        private static final Map<Integer, Supplier<ReadablePacket>> PLAY = new HashMap<>();
 
         static {
             HANDSHAKE.put(0x00, Handshake::new);
@@ -26,70 +27,81 @@ public class Packets {
             STATUS.put(0x01, PingRequest::new);
         }
 
-        public static Packet getStatus(int id, ByteBuffer buffer){
-            return STATUS.get(id).get().readDataFields(buffer);
+        public static ReadablePacket get(@NotNull ConnectionState state, int id) {
+            return switch (state) {
+                case CLOSED -> null;
+                case PLAY -> getPlay(id);
+                case LOGIN -> getLogin(id);
+                case STATUS -> getStatus(id);
+                case HANDSHAKE -> getHandshake(id);
+            };
         }
 
-        public static Packet getStatus(int id){
+        public static ReadablePacket get(ConnectionState state, int id, ByteBuffer buffer) {
+            return get(state, id).read(buffer);
+        }
+
+        public static ReadablePacket getStatus(int id, ByteBuffer buffer) {
+            return STATUS.get(id).get().read(buffer);
+        }
+
+        public static ReadablePacket getStatus(int id) {
             return STATUS.get(id).get();
         }
 
-        public static Packet getHandshake(int id, ByteBuffer buffer) {
-            return HANDSHAKE.get(id).get().readDataFields(buffer);
+        public static ReadablePacket getHandshake(int id, ByteBuffer buffer) {
+            return HANDSHAKE.get(id).get().read(buffer);
         }
 
-        public static Packet getHandshake(int id) {
+        public static ReadablePacket getHandshake(int id) {
             return HANDSHAKE.get(id).get();
         }
 
-        public static Packet getLogin(int id, ByteBuffer buffer){
-            return LOGIN.get(id).get().readDataFields(buffer);
+        public static ReadablePacket getLogin(int id, ByteBuffer buffer) {
+            return LOGIN.get(id).get().read(buffer);
         }
 
-        public static Packet getLogin(int id){
+        public static ReadablePacket getLogin(int id) {
             return LOGIN.get(id).get();
         }
 
-        public static Packet getPlay(int id, ByteBuffer buffer) {
-            return PLAY.get(id).get().readDataFields(buffer);
+        public static ReadablePacket getPlay(int id, ByteBuffer buffer) {
+            return PLAY.get(id).get().read(buffer);
         }
 
-        public static Packet getPlay(int id) {
+        public static ReadablePacket getPlay(int id) {
             return PLAY.get(id).get();
         }
     }
 
     public static final class Clientbound {
-        private static final Map<Integer, Supplier<Packet>> STATUS = new HashMap<>();
-        private static final Map<Integer, Supplier<Packet>> LOGIN = new HashMap<>();
-        private static final Map<Integer, Supplier<Packet>> PLAY = new HashMap<>();
+        private static final Map<Integer, Supplier<WritablePacket>> STATUS = new HashMap<>();
+        private static final Map<Integer, Supplier<WritablePacket>> LOGIN = new HashMap<>();
+        private static final Map<Integer, Supplier<WritablePacket>> PLAY = new HashMap<>();
 
         static {
             STATUS.put(0x00, StatusResponse::new);
             STATUS.put(0x01, PingResponse::new);
         }
 
-        public static Packet getStatus(int id, ByteBuffer buffer){
-            return STATUS.get(id).get().readDataFields(buffer);
+        public static WritablePacket get(@NotNull ConnectionState state, int id) {
+            return switch (state) {
+                case CLOSED, HANDSHAKE -> null;
+                case PLAY -> getPlay(id);
+                case LOGIN -> getLogin(id);
+                case STATUS -> getStatus(id);
+            };
         }
 
-        public static Packet getStatus(int id){
+        public static WritablePacket getStatus(int id) {
             return STATUS.get(id).get();
         }
 
-        public static Packet getLogin(int id, ByteBuffer buffer){
-            return LOGIN.get(id).get().readDataFields(buffer);
-        }
-
-        public static Packet getLogin(int id){
+        public static WritablePacket getLogin(int id) {
             return LOGIN.get(id).get();
         }
 
-        public static Packet getPlay(int id, ByteBuffer buffer) {
-            return PLAY.get(id).get().readDataFields(buffer);
-        }
-
-        public static Packet getPlay(int id) {
+        public static WritablePacket getPlay(int id) {
             return PLAY.get(id).get();
         }
     }

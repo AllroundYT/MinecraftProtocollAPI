@@ -2,24 +2,24 @@ package de.allround.protocol.packets.status.client;
 
 import com.google.gson.JsonObject;
 import de.allround.protocol.datatypes.DataType;
-import de.allround.protocol.packets.Packet;
+import de.allround.protocol.packets.WritablePacket;
 
 import java.nio.ByteBuffer;
 
-public class StatusResponse implements Packet {
+public class StatusResponse implements WritablePacket {
 
+    private final JsonObject players;
     private String version;
     private int protocol;
-    private final JsonObject players;
-
-    {
-        players = new JsonObject();
-        players.addProperty("max",100);
-        players.addProperty("online",0);
-    }
     private String description;
     private boolean enforcesSecureChat;
     private boolean previewsChat;
+
+    {
+        players = new JsonObject();
+        players.addProperty("max", 100);
+        players.addProperty("online", 0);
+    }
 
     public StatusResponse(String version, int protocol, String description, boolean enforcesSecureChat, boolean previewsChat) {
         this.version = version;
@@ -38,7 +38,7 @@ public class StatusResponse implements Packet {
     }
 
     @Override
-    public ByteBuffer writeDataFields() {
+    public ByteBuffer write() {
         JsonObject version = new JsonObject();
         version.addProperty("name", this.version);
         version.addProperty("protocol", this.protocol);
@@ -58,9 +58,4 @@ public class StatusResponse implements Packet {
         return DataType.JSON.write(jsonObject);
     }
 
-    @Override
-    public Packet readDataFields(ByteBuffer buffer) {
-        JsonObject jsonObject = DataType.JSON.read(buffer).getAsJsonObject();
-        return this;
-    }
 }

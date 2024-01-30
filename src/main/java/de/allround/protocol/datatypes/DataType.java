@@ -3,12 +3,13 @@ package de.allround.protocol.datatypes;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
+import de.allround.misc.ByteBufferHelper;
+import de.allround.protocol.datatypes.nbt.NBTEnd;
+import de.allround.protocol.datatypes.nbt.NBTTag;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.io.StringReader;
-import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -174,11 +175,11 @@ public interface DataType<T> {
             return new String(stringBytes);
         }
     };
-    //chat - nbt
+    //todo: chat - nbt
     DataType<JsonElement> JSON = new DataType<>() {
         @Override
         public ByteBuffer write(@NotNull JsonElement jsonElement) {
-            System.out.println(jsonElement.toString());
+            System.out.println(jsonElement);
             return DataType.STRING.write(jsonElement.toString());
         }
 
@@ -205,9 +206,6 @@ public interface DataType<T> {
         @Override
         public @NotNull Identifier read(ByteBuffer buffer) {
             String string = DataType.STRING.read(buffer);
-            if (string == null) {
-                throw new IllegalStateException("Identity string cannot be null.");
-            }
             return Identifier.of(string);
         }
     };
@@ -254,11 +252,58 @@ public interface DataType<T> {
             return value;
         }
     };
+    DataType<NBTTag<?>> NBT = new DataType<>() {
+        @Override
+        public ByteBuffer write(@NotNull NBTTag<?> nbtTag) {
+            return nbtTag.write();
+        }
 
+        @Override
+        public NBTTag<?> read(@NotNull ByteBuffer buffer) {
+            byte id = buffer.get();
+            return NBTTag.fromId(id).read(buffer);
+        }
+    };
+    //todo: entity metadata
+    DataType<Slot> SLOT = new DataType<>() {
+        @Override
+        public ByteBuffer write(@NotNull Slot slot) {
+            ByteBuffer present = DataType.BOOLEAN.write(slot.present());
+            if (slot.present()) {
+                ByteBuffer id = null;
+                ByteBuffer nbt = null;
+                ByteBuffer count = null;
+                if (slot.id() != null) {
+                    id = DataType.VAR_INT.write(slot.id());
 
-    //entity metadata
-    //slot
-    //nbt tag
+                    if (slot.count() != null) {
+                        count = DataType.BYTE.write(slot.count());
+
+                        if (slot.nbt() == null) {
+                            nbt = DataType.NBT.write(new NBTEnd());
+                        }
+                    }
+                }
+                return ByteBufferHelper.combine(present, id, count, nbt);
+            } else {
+                return present;
+            }
+        }
+
+        @Contract("_ -> new")
+        @Override
+        public @NotNull Slot read(@NotNull ByteBuffer buffer) {
+            boolean present = DataType.BOOLEAN.read(buffer);
+            if (!present) return new Slot(false,null,null,null);
+            Integer id = DataType.VAR_INT.read(buffer);
+            if (!buffer.hasRemaining()) return new Slot(true, id, null, null);
+            Byte count = DataType.BYTE.read(buffer);
+            if (!buffer.hasRemaining()) return new Slot(true, id, count , null);
+            NBTTag<?> nbtTag = DataType.NBT.read(buffer);
+            if (nbtTag instanceof NBTEnd) return new Slot(true, id, count, null);
+            return new Slot(true, id,count,nbtTag);
+        }
+    };
     DataType<Position> POSITION = new DataType<>() {
         @Override
         public @NotNull ByteBuffer write(@NotNull Position position) {
@@ -312,11 +357,11 @@ public interface DataType<T> {
         }
     };
 
-    static int fixedPointNumber(double d){
+    static int fixedPointNumber(double d) {
         return (int) (d * 32.0D);
     }
 
-    static double fixedPointNumber(int i){
+    static double fixedPointNumber(int i) {
         return i / 32.0D;
     }
 
@@ -324,7 +369,7 @@ public interface DataType<T> {
 
     T read(ByteBuffer buffer);
 
-    default T read(ByteBuffer buffer, int size){
+    default T read(ByteBuffer buffer, int size) {
         return null;
     }
 }

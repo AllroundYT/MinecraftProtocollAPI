@@ -13,6 +13,8 @@
     <option name="packages">
       <set>
         <option value="de.allround" />
+        <option value="de.allround.connections" />
+        <option value="de.allround.eventloop" />
         <option value="de.allround.future" />
         <option value="de.allround.misc" />
         <option value="de.allround.network" />
