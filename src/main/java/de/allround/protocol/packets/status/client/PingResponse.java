@@ -1,9 +1,8 @@
 package de.allround.protocol.packets.status.client;
 
-import de.allround.protocol.datatypes.DataType;
+import de.allround.protocol.datatypes.ByteBuffer;
 import de.allround.protocol.packets.WritablePacket;
 
-import java.nio.ByteBuffer;
 
 public class PingResponse implements WritablePacket {
 
@@ -23,7 +22,7 @@ public class PingResponse implements WritablePacket {
 
     @Override
     public ByteBuffer write() {
-        return DataType.LONG.write(payload);
+        return new ByteBuffer().writeLong(payload);
     }
 
 }

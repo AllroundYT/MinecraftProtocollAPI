@@ -34,13 +34,13 @@ public class Identifier {
     @Contract("_, _ -> new")
     public static @NotNull Identifier of(@NotNull String namespace, String value) {
         if (!namespace.matches(NAMESPACE_REGEX) || !value.matches(VALUE_REGEX)) {
-            throw new IllegalStateException("Identifiers has to match \"" + NAMESPACE_REGEX + ":" + VALUE_REGEX+"\"");
+            throw new IllegalStateException(STR."Identifiers has to match \"\{NAMESPACE_REGEX}:\{VALUE_REGEX}\"");
         }
 
         return new Identifier(namespace, value);
     }
 
     public String toString() {
-        return (namespace + ":" + value);
+        return (STR."\{namespace}:\{value}");
     }
 }

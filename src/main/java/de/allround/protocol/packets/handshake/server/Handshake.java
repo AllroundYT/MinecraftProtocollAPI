@@ -1,10 +1,10 @@
 package de.allround.protocol.packets.handshake.server;
 
 import de.allround.protocol.ConnectionState;
-import de.allround.protocol.datatypes.DataType;
+import de.allround.protocol.datatypes.ByteBuffer;
 import de.allround.protocol.packets.ReadablePacket;
+import org.jetbrains.annotations.NotNull;
 
-import java.nio.ByteBuffer;
 
 public class Handshake implements ReadablePacket {
     private int protocolVersion;
@@ -34,11 +34,11 @@ public class Handshake implements ReadablePacket {
     }
 
     @Override
-    public Handshake read(ByteBuffer buffer) {
-        protocolVersion = DataType.VAR_INT.read(buffer);
-        serverAddress = DataType.STRING.read(buffer);
-        serverPort = DataType.SHORT.read(buffer);
-        nextState = ConnectionState.fromOrdinal(DataType.VAR_INT.read(buffer));
+    public Handshake read(@NotNull ByteBuffer buffer) {
+        protocolVersion = buffer.readVarInt();
+        serverAddress = buffer.readString();
+        serverPort = buffer.readShort();
+        nextState = ConnectionState.fromOrdinal(buffer.readVarInt());
         return this;
     }
 }

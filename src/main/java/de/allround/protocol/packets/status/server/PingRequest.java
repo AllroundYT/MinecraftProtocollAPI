@@ -1,9 +1,9 @@
 package de.allround.protocol.packets.status.server;
 
-import de.allround.protocol.datatypes.DataType;
+import de.allround.protocol.datatypes.ByteBuffer;
 import de.allround.protocol.packets.ReadablePacket;
+import org.jetbrains.annotations.NotNull;
 
-import java.nio.ByteBuffer;
 
 public class PingRequest implements ReadablePacket {
     private long payload;
@@ -19,8 +19,8 @@ public class PingRequest implements ReadablePacket {
 
 
     @Override
-    public ReadablePacket read(ByteBuffer buffer) {
-        payload = DataType.LONG.read(buffer);
+    public ReadablePacket read(@NotNull ByteBuffer buffer) {
+        payload = buffer.readLong();
         return this;
     }
 }

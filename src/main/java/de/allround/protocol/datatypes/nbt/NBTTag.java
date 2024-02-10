@@ -1,33 +1,31 @@
 package de.allround.protocol.datatypes.nbt;
 
-import java.nio.ByteBuffer;
 
-public abstract class NBTTag<Type> {
+import de.allround.protocol.datatypes.ByteBuffer;
 
+import java.util.List;
 
+public interface NBTTag<Type> {
 
-    protected final Type data;
+    NBTTag<Void> END = new NBTTagImpl<>(0, _ -> new ByteBuffer(), _ -> null);
+    NBTTag<Byte> BYTE = new NBTTagImpl<>(1, new ByteBuffer()::write, ByteBuffer::read);
+    NBTTag<Short> SHORT = new NBTTagImpl<>(2, new ByteBuffer()::writeShort, ByteBuffer::readShort);
 
-    protected NBTTag(Type data) {
-        this.data = data;
-    }
-
+    NBTTag<Integer> INTEGER = new NBTTagImpl<>(3, new ByteBuffer()::writeInteger, ByteBuffer::readInteger);
+    List<NBTTag<?>> VALUES = List.of(END, BYTE, SHORT);
 
     @SuppressWarnings("unchecked")
-    public static <Type> NBTTag<Type> fromId(byte id){
-        return (NBTTag<Type>) switch (id){
-            case 0x01 -> new NBTByte((byte) 0);
-            case 0x02 -> new NBTShort((short) 0);
-            default -> new NBTEnd();
-        };
+    static <T> NBTTag<T> forId(byte id) {
+        return (NBTTag<T>) VALUES.stream().filter(nbtTag -> (nbtTag.id() == id)).findFirst().orElse(END);
     }
 
-    public abstract ByteBuffer write();
+    ByteBuffer write();
 
-    public abstract NBTTag<Type> read(ByteBuffer buffer);
+    NBTTag<Type> read(ByteBuffer buffer);
 
-    public Type getData() {
-        return data;
-    }
+    Type data();
 
+    NBTTag<Type> data(Type data);
+
+    byte id();
 }

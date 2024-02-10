@@ -1,8 +1,7 @@
 package de.allround.protocol.packets.status.server;
 
+import de.allround.protocol.datatypes.ByteBuffer;
 import de.allround.protocol.packets.ReadablePacket;
-
-import java.nio.ByteBuffer;
 
 public class StatusRequest implements ReadablePacket {
     @Override

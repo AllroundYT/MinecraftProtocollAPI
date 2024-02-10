@@ -1,6 +1,7 @@
 package de.allround.protocol.packets;
 
 import de.allround.protocol.ConnectionState;
+import de.allround.protocol.datatypes.ByteBuffer;
 import de.allround.protocol.packets.handshake.server.Handshake;
 import de.allround.protocol.packets.status.client.PingResponse;
 import de.allround.protocol.packets.status.client.StatusResponse;
@@ -8,12 +9,14 @@ import de.allround.protocol.packets.status.server.PingRequest;
 import de.allround.protocol.packets.status.server.StatusRequest;
 import org.jetbrains.annotations.NotNull;
 
-import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
 
+
 public class Packets {
+
+
     public static final class Serverbound {
         private static final Map<Integer, Supplier<ReadablePacket>> HANDSHAKE = new HashMap<>();
         private static final Map<Integer, Supplier<ReadablePacket>> STATUS = new HashMap<>();

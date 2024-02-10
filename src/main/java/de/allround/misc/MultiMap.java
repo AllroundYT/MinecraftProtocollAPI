@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.BiConsumer;
+import java.util.function.BiPredicate;
 
 
 public class MultiMap<I, T> {
@@ -29,10 +30,19 @@ public class MultiMap<I, T> {
         return map.isEmpty();
     }
 
+    public MultiMap<I, T> forEach(BiPredicate<I, List<T>> predicate, BiConsumer<I, List<T>> consumer) {
+        map.forEach((i, ts) -> {
+            if (predicate.test(i, ts)) {
+                consumer.accept(i, ts);
+            }
+        });
+        return this;
+    }
+
     @SafeVarargs
     public final void add(I index, T... objects) {
         map.compute(index, (i, ts) -> {
-            if (ts == null) ts = new ArrayList<>();
+            if (ts == null) ts = Collections.synchronizedList(new ArrayList<>());
             for (T object : List.of(objects)) {
                 if (!ts.contains(object)) {
                     ts.add(object);
