@@ -87,7 +87,6 @@ public class ByteBuffer {
     }
 
     public ByteBuffer clone() {
-        ByteBuffer buffer = (ByteBuffer) super.clone();
         return new ByteBuffer(bytes).setCursor(writeCursor, true).setCursor(readCursor, false);
     }
 
