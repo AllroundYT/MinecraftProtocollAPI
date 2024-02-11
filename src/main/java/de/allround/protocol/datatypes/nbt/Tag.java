@@ -16,17 +16,6 @@ public abstract sealed class Tag permits ByteArrayTag, ByteTag, CompoundTag, Dou
         this.name = name;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public abstract byte getType();
-
-    @Override
-    public final String toString() {
-        return stringify(this, 0);
-    }
-
     public static @NotNull Tag readNamedTag(@NotNull ByteBuffer buffer) {
         byte tagType = buffer.read();
         if (tagType == 0) {
@@ -51,34 +40,24 @@ public abstract sealed class Tag permits ByteArrayTag, ByteTag, CompoundTag, Dou
         stringBuilder.append(tag.getClass().getSimpleName()).append("('").append(tag.getName()).append("'): ");
 
         switch (tag.getType()) {
-            case 0:
-                stringBuilder.append("END\n");
-                break;
-            case 1:
-                stringBuilder.append(((ByteTag) tag).getValue()).append("\n");
-                break;
-            case 2:
-                stringBuilder.append(((ShortTag) tag).getValue()).append("\n");
-                break;
-            case 3:
-                stringBuilder.append(((IntTag) tag).getValue()).append("\n");
-                break;
-            case 4:
-                stringBuilder.append(((LongTag) tag).getValue()).append("\n");
-                break;
-            case 5:
-                stringBuilder.append(((FloatTag) tag).getValue()).append("\n");
-                break;
-            case 6:
-                stringBuilder.append(((DoubleTag) tag).getValue()).append("\n");
-                break;
-            case 7:
-                stringBuilder.append(Arrays.toString(((ByteArrayTag) tag).getValue())).append("\n");
-                break;
-            case 8:
-                stringBuilder.append(((StringTag) tag).getValue()).append("\n");
-                break;
-            case 9:
+            case 0 -> stringBuilder.append("END\n");
+
+            case 1 -> stringBuilder.append(((ByteTag) tag).getValue()).append("\n");
+
+            case 2 -> stringBuilder.append(((ShortTag) tag).getValue()).append("\n");
+            case 3 -> stringBuilder.append(((IntTag) tag).getValue()).append("\n");
+
+            case 4 -> stringBuilder.append(((LongTag) tag).getValue()).append("\n");
+
+            case 5 -> stringBuilder.append(((FloatTag) tag).getValue()).append("\n");
+
+            case 6 -> stringBuilder.append(((DoubleTag) tag).getValue()).append("\n");
+
+            case 7 -> stringBuilder.append(Arrays.toString(((ByteArrayTag) tag).getValue())).append("\n");
+
+            case 8 -> stringBuilder.append(((StringTag) tag).getValue()).append("\n");
+
+            case 9 -> {
                 List<Tag> listValue = ((ListTag) tag).getValue();
                 stringBuilder.append(listValue.size()).append(" entries\n");
                 appendIndentation(stringBuilder, depth);
@@ -89,8 +68,9 @@ public abstract sealed class Tag permits ByteArrayTag, ByteTag, CompoundTag, Dou
                 }
                 appendIndentation(stringBuilder, depth);
                 stringBuilder.append("}\n");
-                break;
-            case 10:
+            }
+
+            case 10 -> {
                 List<Tag> compoundValue = ((CompoundTag) tag).getValue();
                 stringBuilder.append(compoundValue.size()).append(" entries\n");
                 appendIndentation(stringBuilder, depth);
@@ -101,50 +81,55 @@ public abstract sealed class Tag permits ByteArrayTag, ByteTag, CompoundTag, Dou
                 }
                 appendIndentation(stringBuilder, depth);
                 stringBuilder.append("}\n");
-                break;
-            case 11:
-                stringBuilder.append(Arrays.toString(((IntArrayTag) tag).getValue())).append("\n");
-                break;
-            case 12:
-                stringBuilder.append(Arrays.toString(((LongArrayTag) tag).getValue())).append("\n");
-                break;
-            default:
-                stringBuilder.append("Unknown tag type\n");
-                break;
+            }
+
+            case 11 -> stringBuilder.append(Arrays.toString(((IntArrayTag) tag).getValue())).append("\n");
+
+            case 12 -> stringBuilder.append(Arrays.toString(((LongArrayTag) tag).getValue())).append("\n");
+
+            default -> stringBuilder.append("Unknown tag type\n");
+
         }
 
         return stringBuilder.toString();
     }
 
-
-
     private static void appendIndentation(StringBuilder stringBuilder, int depth) {
         stringBuilder.append("  ".repeat(Math.max(0, depth)));
     }
 
-
     @Contract("_, _, _ -> new")
     public static @NotNull Tag readPayload(byte tagType, String name, ByteBuffer buffer) {
         switch (tagType) {
-            case 0: return new EndTag();
-            case 1:
+            case 0 -> {
+                return new EndTag();
+            }
+            case 1 -> {
                 return new ByteTag(name, buffer.read());
-            case 2:
+            }
+            case 2 -> {
                 return new ShortTag(name, buffer.readShort());
-            case 3:
+            }
+            case 3 -> {
                 return new IntTag(name, buffer.readInteger());
-            case 4:
+            }
+            case 4 -> {
                 return new LongTag(name, buffer.readLong());
-            case 5:
+            }
+            case 5 -> {
                 return new FloatTag(name, buffer.readFloat());
-            case 6:
+            }
+            case 6 -> {
                 return new DoubleTag(name, buffer.readDouble());
-            case 7:
+            }
+            case 7 -> {
                 int length = buffer.readVarInt();
                 return new ByteArrayTag(name, buffer.readArray(length));
-            case 8:
+            }
+            case 8 -> {
                 return new StringTag(name, readString(buffer));
-            case 9:
+            }
+            case 9 -> {
                 byte listTagType = buffer.read();
                 int listLength = buffer.readInteger();
                 List<Tag> list = new ArrayList<>();
@@ -152,29 +137,32 @@ public abstract sealed class Tag permits ByteArrayTag, ByteTag, CompoundTag, Dou
                     list.add(readPayload(listTagType, "", buffer));
                 }
                 return new ListTag(name, listTagType, list);
-            case 10:
+            }
+            case 10 -> {
                 List<Tag> compoundList = new ArrayList<>();
                 Tag tag;
                 while (!((tag = readNamedTag(buffer)) instanceof EndTag)) {
                     compoundList.add(tag);
                 }
                 return new CompoundTag(name, compoundList);
-            case 11:
+            }
+            case 11 -> {
                 int intArrayLength = buffer.readInteger();
                 int[] intArray = new int[intArrayLength];
                 for (int i = 0; i < intArrayLength; i++) {
                     intArray[i] = buffer.readInteger();
                 }
                 return new IntArrayTag(name, intArray);
-            case 12:
+            }
+            case 12 -> {
                 int longArrayLength = buffer.readInteger();
                 long[] longArray = new long[longArrayLength];
                 for (int i = 0; i < longArrayLength; i++) {
                     longArray[i] = buffer.readLong();
                 }
                 return new LongArrayTag(name, longArray);
-            default:
-                throw new IllegalArgumentException(STR."Unknown tag type: \{tagType}");
+            }
+            default -> throw new IllegalArgumentException(STR."Unknown tag type: \{tagType}");
         }
     }
 
@@ -193,7 +181,7 @@ public abstract sealed class Tag permits ByteArrayTag, ByteTag, CompoundTag, Dou
         }
     }
 
-    public static <T extends Tag>  void writePayload(ByteBuffer buffer, T tag) {
+    public static <T extends Tag> void writePayload(ByteBuffer buffer, T tag) {
         switch (tag.getType()) {
             case 1 -> buffer.write(((ByteTag) tag).getValue());
             case 2 -> buffer.writeShort(((ShortTag) tag).getValue());
@@ -243,5 +231,16 @@ public abstract sealed class Tag permits ByteArrayTag, ByteTag, CompoundTag, Dou
     public static void writeString(ByteBuffer buffer, String value) {
         buffer.writeShort((short) value.length());
         buffer.write(value.getBytes());
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public abstract byte getType();
+
+    @Override
+    public final String toString() {
+        return stringify(this, 0);
     }
 }
