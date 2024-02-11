@@ -3,7 +3,8 @@ package de.allround.protocol.datatypes;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
-import de.allround.protocol.datatypes.nbt.NBTTag;
+import de.allround.protocol.datatypes.nbt.EndTag;
+import de.allround.protocol.datatypes.nbt.Tag;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
@@ -22,8 +23,8 @@ public class ByteBuffer {
     //var int
     private static final int SEGMENT_BITS = 0x7F;
     private static final int CONTINUE_BIT = 0x80;
-    int JSON_MAX_LENGTH = 262144;
     final int IDENTIFIER_MAX_LENGTH = 32767;
+    int JSON_MAX_LENGTH = 262144;
     private int writeCursor, readCursor;
     private byte[] bytes;
 
@@ -81,9 +82,21 @@ public class ByteBuffer {
         return i / 32.0D;
     }
 
+    @Override
+    public String toString() {
+        return Arrays.toString(getArray());
+    }
+
+    public int getWriteCursor() {
+        return writeCursor;
+    }
+
+    public int getReadCursor() {
+        return readCursor;
+    }
 
     public boolean hasRemaining() {
-        return getSize() - (readCursor + 1) > 0;
+        return getRemaining() > 0;
     }
 
     public ByteBuffer clone() {
@@ -162,7 +175,6 @@ public class ByteBuffer {
         return ((long) bytes[0] << 56) | ((long) (bytes[1] & 0xFF) << 48) | ((long) (bytes[2] & 0xFF) << 40) | ((long) (bytes[3] & 0xFF) << 32) | ((long) (bytes[4] & 0xFF) << 24) | ((long) (bytes[5] & 0xFF) << 16) | ((long) (bytes[6] & 0xFF) << 8) | ((long) bytes[7] & 0xFF);
     }
 
-    //STANDARD JAVA TYPES
 
     private double toDouble(byte[] bytes) {
         return Double.longBitsToDouble(toLong(bytes));
@@ -180,14 +192,6 @@ public class ByteBuffer {
         return bytes.length > pos;
     }
 
-    private byte @NotNull [] getBytesAfter(int pos) {
-        byte[] bytesAfter = new byte[getSize() - pos];
-        writeCursor = pos;
-        if (bytes.length - pos >= 0) {
-            System.arraycopy(bytes, pos, bytesAfter, 0, bytes.length - pos);
-        }
-        return bytesAfter;
-    }
 
     /**
      * Gets the size of this bytebuffer
@@ -366,7 +370,7 @@ public class ByteBuffer {
      */
     public ByteBuffer insert(int pos, byte b) {
 
-        byte[] bytesAfter = getBytesAfter(pos);
+        byte[] bytesAfter = readRemaining(pos);
         write(pos, b);
         write(bytesAfter);
 
@@ -382,7 +386,7 @@ public class ByteBuffer {
      */
     public ByteBuffer insert(int pos, byte[] array) {
 
-        byte[] bytesAfter = getBytesAfter(pos);
+        byte[] bytesAfter = readRemaining(pos);
         write(pos, array);
         write(bytesAfter);
 
@@ -392,7 +396,7 @@ public class ByteBuffer {
 
     public ByteBuffer insert(int pos, ByteBuffer buffer) {
 
-        byte[] bytesAfter = getBytesAfter(pos);
+        byte[] bytesAfter = readRemaining(pos);
         write(pos, buffer);
         write(bytesAfter);
 
@@ -408,7 +412,7 @@ public class ByteBuffer {
      */
     public ByteBuffer insert(int pos, java.nio.@NotNull ByteBuffer nioBuffer) {
 
-        byte[] bytesAfter = getBytesAfter(pos);
+        byte[] bytesAfter = readRemaining(pos);
         write(pos, nioBuffer);
         write(bytesAfter);
 
@@ -423,7 +427,7 @@ public class ByteBuffer {
      */
     public ByteBuffer insert(byte b) {
 
-        byte[] bytesAfter = getBytesAfter(writeCursor);
+        byte[] bytesAfter = readRemaining(writeCursor);
         write(b);
         write(bytesAfter);
 
@@ -438,7 +442,7 @@ public class ByteBuffer {
      */
     public ByteBuffer insert(byte[] array) {
 
-        byte[] bytesAfter = getBytesAfter(writeCursor);
+        byte[] bytesAfter = readRemaining(writeCursor);
         write(array);
         write(bytesAfter);
 
@@ -453,7 +457,7 @@ public class ByteBuffer {
      */
     public ByteBuffer insert(java.nio.@NotNull ByteBuffer nioBuffer) {
 
-        byte[] bytesAfter = getBytesAfter(writeCursor);
+        byte[] bytesAfter = readRemaining(writeCursor);
         write(nioBuffer);
         write(bytesAfter);
 
@@ -462,7 +466,7 @@ public class ByteBuffer {
 
     public ByteBuffer insert(ByteBuffer buffer) {
 
-        byte[] bytesAfter = getBytesAfter(writeCursor);
+        byte[] bytesAfter = readRemaining(writeCursor);
         write(buffer);
         write(bytesAfter);
 
@@ -485,6 +489,19 @@ public class ByteBuffer {
             array[i] = read();
         }
         return array;
+    }
+
+    public byte[] readRemaining(int pos) {
+        readCursor = pos;
+        return readRemaining();
+    }
+
+    public byte[] readRemaining() {
+        byte[] bytesAfter = new byte[getSize() - readCursor];
+        if (bytes.length - readCursor >= 0) {
+            System.arraycopy(bytes, readCursor, bytesAfter, 0, bytes.length - readCursor);
+        }
+        return bytesAfter;
     }
 
     public byte[] readArray(int length) {
@@ -895,10 +912,9 @@ public class ByteBuffer {
     }
 
     public ByteBuffer writeIdentifier(@NotNull Identifier value) {
-        return writeString(String.copyValueOf(
-                value.toString().toCharArray(),
-                0,
-                Math.min(value.toString().length(), IDENTIFIER_MAX_LENGTH)
+        return writeString(String.copyValueOf(value.toString().toCharArray(),
+                                              0,
+                                              Math.min(value.toString().length(), IDENTIFIER_MAX_LENGTH)
         ));
     }
 
@@ -908,10 +924,9 @@ public class ByteBuffer {
     }
 
     public ByteBuffer insertIdentifier(@NotNull Identifier value) {
-        return insertString(String.copyValueOf(
-                value.toString().toCharArray(),
-                0,
-                Math.min(value.toString().length(), IDENTIFIER_MAX_LENGTH)
+        return insertString(String.copyValueOf(value.toString().toCharArray(),
+                                               0,
+                                               Math.min(value.toString().length(), IDENTIFIER_MAX_LENGTH)
         ));
     }
 
@@ -960,36 +975,6 @@ public class ByteBuffer {
         return readPosition();
     }
 
-    public ByteBuffer writeNBT(@NotNull NBTTag<?> value) {
-        write(value.id());
-        write(value.write());
-        return this;
-    }
-
-    public ByteBuffer writeNBT(int pos, @NotNull NBTTag<?> value) {
-        writeCursor = pos;
-        return writeNBT(value);
-    }
-
-    public ByteBuffer insertNBT(@NotNull NBTTag<?> value) {
-        insert(value.id());
-        insert(value.write());
-        return this;
-    }
-
-    public ByteBuffer insertNBT(int pos, @NotNull NBTTag<?> value) {
-        writeCursor = pos;
-        return insertNBT(value);
-    }
-
-    public NBTTag<?> readNBT() {
-        return NBTTag.forId(read()).read(this);
-    }
-
-    public NBTTag<?> readNBT(int pos) {
-        readCursor = pos;
-        return readNBT();
-    }
 
     public ByteBuffer writeSlot(@NotNull Slot slot) {
         writeBoolean(slot.present());
@@ -1001,9 +986,9 @@ public class ByteBuffer {
                     write(slot.count());
 
                     if (slot.nbt() == null) {
-                        writeNBT(NBTTag.END);
+                        Tag.writeTag(this, new EndTag());
                     } else {
-                        writeNBT(slot.nbt());
+                        Tag.writeTag(this, slot.nbt());
                     }
                 }
             }
@@ -1025,11 +1010,13 @@ public class ByteBuffer {
                 if (slot.count() != null) {
                     insert(slot.count());
 
+                    ByteBuffer buffer = new ByteBuffer();
                     if (slot.nbt() == null) {
-                        insertNBT(NBTTag.END);
+                        Tag.writeTag(buffer, new EndTag());
                     } else {
-                        insertNBT(slot.nbt());
+                        Tag.writeTag(buffer, slot.nbt());
                     }
+                    insert(buffer);
                 }
             }
         }
@@ -1048,13 +1035,17 @@ public class ByteBuffer {
         if (!hasRemaining()) return new Slot(true, id, null, null);
         byte count = read();
         if (!hasRemaining()) return new Slot(true, id, count, null);
-        NBTTag<?> nbtTag = readNBT();
-        if (nbtTag.id() == NBTTag.END.id()) return new Slot(true, id, count, null);
+        Tag nbtTag = Tag.readTag(this);
+        if (nbtTag instanceof EndTag) return new Slot(true, id, count, null);
         return new Slot(true, id, count, nbtTag);
     }
 
     public Slot readSlot(int pos) {
         readCursor = pos;
         return readSlot();
+    }
+
+    public int getRemaining() {
+        return getSize() - (readCursor);
     }
 }
