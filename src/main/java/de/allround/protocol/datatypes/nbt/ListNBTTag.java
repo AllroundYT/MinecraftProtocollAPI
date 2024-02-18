@@ -2,11 +2,11 @@ package de.allround.protocol.datatypes.nbt;
 
 import java.util.List;
 
-public final class ListTag extends Tag {
+public final class ListNBTTag extends NBTTag {
     private final byte tagId;
-    private final List<Tag> value;
+    private final List<NBTTag> value;
 
-    public ListTag(String name, byte tagId, List<Tag> value) {
+    public ListNBTTag(String name, byte tagId, List<NBTTag> value) {
         super(name);
         this.tagId = tagId;
         this.value = value;
@@ -16,7 +16,7 @@ public final class ListTag extends Tag {
         return tagId;
     }
 
-    public List<Tag> getValue() {
+    public List<NBTTag> getValue() {
         return value;
     }
 

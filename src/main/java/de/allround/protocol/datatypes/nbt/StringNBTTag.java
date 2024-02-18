@@ -1,9 +1,9 @@
 package de.allround.protocol.datatypes.nbt;
 
-public final class StringTag extends Tag {
+public final class StringNBTTag extends NBTTag {
     private final String value;
 
-    public StringTag(String name, String value) {
+    public StringNBTTag(String name, String value) {
         super(name);
         this.value = value;
     }

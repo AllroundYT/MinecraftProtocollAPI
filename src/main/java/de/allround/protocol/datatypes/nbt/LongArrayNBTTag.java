@@ -1,9 +1,9 @@
 package de.allround.protocol.datatypes.nbt;
 
-public final class LongArrayTag extends Tag {
+public final class LongArrayNBTTag extends NBTTag {
     private final long[] value;
 
-    public LongArrayTag(String name, long[] value) {
+    public LongArrayNBTTag(String name, long[] value) {
         super(name);
         this.value = value;
     }

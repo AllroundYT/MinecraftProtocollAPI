@@ -1,19 +1,16 @@
-package de.allround.protocol.packets.status.client;
+package de.allround.protocol.packets.configuration.client;
 
 import de.allround.protocol.datatypes.ByteBuffer;
 import de.allround.protocol.packets.WritablePacket;
 
-
-public record PingResponse(long payload) implements WritablePacket {
-
+public record Ping(int id) implements WritablePacket {
     @Override
     public int getID() {
-        return 0x01;
+        return 0x04;
     }
 
     @Override
     public ByteBuffer write() {
-        return new ByteBuffer().write(payload);
+        return new ByteBuffer().write(id);
     }
-
 }

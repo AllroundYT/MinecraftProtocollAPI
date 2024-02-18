@@ -1,7 +1,7 @@
 package de.allround.protocol.datatypes.nbt;
 
-public final class EndTag extends Tag {
-    public EndTag() {
+public final class EndNBTTag extends NBTTag {
+    public EndNBTTag() {
         super("");
     }
 

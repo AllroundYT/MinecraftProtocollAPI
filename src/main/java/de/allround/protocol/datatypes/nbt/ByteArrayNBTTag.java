@@ -1,9 +1,9 @@
 package de.allround.protocol.datatypes.nbt;
 
-public final class ByteArrayTag extends Tag {
+public final class ByteArrayNBTTag extends NBTTag {
     private final byte[] value;
 
-    public ByteArrayTag(String name, byte[] value) {
+    public ByteArrayNBTTag(String name, byte[] value) {
         super(name);
         this.value = value;
     }

@@ -1,10 +1,10 @@
-package de.allround.protocol.packets.status.client;
+package de.allround.protocol.packets.configuration.client;
 
 import de.allround.protocol.datatypes.ByteBuffer;
+import de.allround.protocol.datatypes.Chat;
 import de.allround.protocol.packets.WritablePacket;
 
-
-public record PingResponse(long payload) implements WritablePacket {
+public record Disconnect(Chat reason) implements WritablePacket {
 
     @Override
     public int getID() {
@@ -13,7 +13,6 @@ public record PingResponse(long payload) implements WritablePacket {
 
     @Override
     public ByteBuffer write() {
-        return new ByteBuffer().write(payload);
+        return new ByteBuffer().write(reason.toNBT());
     }
-
 }

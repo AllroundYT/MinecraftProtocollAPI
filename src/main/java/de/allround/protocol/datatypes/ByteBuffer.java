@@ -3,8 +3,8 @@ package de.allround.protocol.datatypes;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
-import de.allround.protocol.datatypes.nbt.EndTag;
-import de.allround.protocol.datatypes.nbt.Tag;
+import de.allround.protocol.datatypes.nbt.EndNBTTag;
+import de.allround.protocol.datatypes.nbt.NBTTag;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
@@ -129,6 +129,20 @@ public class ByteBuffer {
                 (byte) (value >>> 8),
                 (byte) value
         };
+    }
+
+    /**
+     * Returns a new ByteBuffer with only the bytes from before the given index (excluded).
+     *
+     * @param index The index where to split
+     * @return A new ByteBuffer
+     */
+    public ByteBuffer getBefore(int index) {
+        if (index >= bytes.length) return this;
+        if (index < 0) return new ByteBuffer();
+        byte[] newBuffersBytes = new byte[index + 1];
+        System.arraycopy(bytes, 0, newBuffersBytes, 0, index + 1);
+        return new ByteBuffer(newBuffersBytes);
     }
 
     @Contract("_ -> new")
@@ -512,22 +526,22 @@ public class ByteBuffer {
         return array;
     }
 
-    public ByteBuffer writeBoolean(boolean value) {
+    public ByteBuffer write(boolean value) {
         write((byte) (value ? 1 : 0));
         return this;
     }
 
-    public ByteBuffer writeBoolean(int pos, boolean value) {
+    public ByteBuffer write(int pos, boolean value) {
         write(pos, (byte) (value ? 1 : 0));
         return this;
     }
 
-    public ByteBuffer insertBoolean(boolean value) {
+    public ByteBuffer insert(boolean value) {
         insert((byte) (value ? 1 : 0));
         return this;
     }
 
-    public ByteBuffer insertBoolean(int pos, boolean value) {
+    public ByteBuffer insert(int pos, boolean value) {
         insert(pos, (byte) (value ? 1 : 0));
         return this;
     }
@@ -540,22 +554,22 @@ public class ByteBuffer {
         return read(pos) == 1;
     }
 
-    public ByteBuffer writeShort(short value) {
+    public ByteBuffer write(short value) {
         write(toBytes(value));
         return this;
     }
 
-    public ByteBuffer writeShort(int pos, short value) {
+    public ByteBuffer write(int pos, short value) {
         write(pos, toBytes(value));
         return this;
     }
 
-    public ByteBuffer insertShort(short value) {
+    public ByteBuffer insert(short value) {
         insert(toBytes(value));
         return this;
     }
 
-    public ByteBuffer insertShort(int pos, short value) {
+    public ByteBuffer insert(int pos, short value) {
         insert(pos, toBytes(value));
         return this;
     }
@@ -568,22 +582,22 @@ public class ByteBuffer {
         return toShort(readArray(pos, 2));
     }
 
-    public ByteBuffer writeInteger(int value) {
+    public ByteBuffer write(int value) {
         write(toBytes(value));
         return this;
     }
 
-    public ByteBuffer writeInteger(int pos, int value) {
+    public ByteBuffer write(int pos, int value) {
         write(pos, toBytes(value));
         return this;
     }
 
-    public ByteBuffer insertInteger(int value) {
+    public ByteBuffer insert(int value) {
         insert(toBytes(value));
         return this;
     }
 
-    public ByteBuffer insertInteger(int pos, int value) {
+    public ByteBuffer insert(int pos, int value) {
         insert(pos, toBytes(value));
         return this;
     }
@@ -596,22 +610,22 @@ public class ByteBuffer {
         return toInteger(readArray(pos, 4));
     }
 
-    public ByteBuffer writeLong(long value) {
+    public ByteBuffer write(long value) {
         write(toBytes(value));
         return this;
     }
 
-    public ByteBuffer writeLong(int pos, long value) {
+    public ByteBuffer write(int pos, long value) {
         write(pos, toBytes(value));
         return this;
     }
 
-    public ByteBuffer insertLong(long value) {
+    public ByteBuffer insert(long value) {
         insert(toBytes(value));
         return this;
     }
 
-    public ByteBuffer insertLong(int pos, long value) {
+    public ByteBuffer insert(int pos, long value) {
         insert(pos, toBytes(value));
         return this;
     }
@@ -624,22 +638,22 @@ public class ByteBuffer {
         return toLong(readArray(pos, 8));
     }
 
-    public ByteBuffer writeDouble(double value) {
+    public ByteBuffer write(double value) {
         write(toBytes(value));
         return this;
     }
 
-    public ByteBuffer writeDouble(int pos, double value) {
+    public ByteBuffer write(int pos, double value) {
         write(pos, toBytes(value));
         return this;
     }
 
-    public ByteBuffer insertDouble(double value) {
+    public ByteBuffer insert(double value) {
         insert(toBytes(value));
         return this;
     }
 
-    public ByteBuffer insertDouble(int pos, double value) {
+    public ByteBuffer insert(int pos, double value) {
         insert(pos, toBytes(value));
         return this;
     }
@@ -652,22 +666,22 @@ public class ByteBuffer {
         return toDouble(readArray(pos, 8));
     }
 
-    public ByteBuffer writeFloat(float value) {
+    public ByteBuffer write(float value) {
         write(toBytes(value));
         return this;
     }
 
-    public ByteBuffer writeFloat(int pos, float value) {
+    public ByteBuffer write(int pos, float value) {
         write(pos, toBytes(value));
         return this;
     }
 
-    public ByteBuffer insertFloat(float value) {
+    public ByteBuffer insert(float value) {
         insert(toBytes(value));
         return this;
     }
 
-    public ByteBuffer insertFloat(int pos, float value) {
+    public ByteBuffer insert(int pos, float value) {
         insert(pos, toBytes(value));
         return this;
     }
@@ -680,22 +694,22 @@ public class ByteBuffer {
         return toFloat(readArray(pos, 4));
     }
 
-    public ByteBuffer writeUUID(@NotNull UUID value) {
-        return writeLong(value.getMostSignificantBits()).writeLong(value.getLeastSignificantBits());
+    public ByteBuffer write(@NotNull UUID value) {
+        return write(value.getMostSignificantBits()).write(value.getLeastSignificantBits());
     }
 
-    public ByteBuffer writeUUID(int pos, @NotNull UUID value) {
+    public ByteBuffer write(int pos, @NotNull UUID value) {
         writeCursor = pos;
-        return writeUUID(value);
+        return write(value);
     }
 
-    public ByteBuffer insertUUID(@NotNull UUID value) {
-        return insertLong(value.getMostSignificantBits()).writeLong(value.getLeastSignificantBits());
+    public ByteBuffer insert(@NotNull UUID value) {
+        return insert(value.getMostSignificantBits()).write(value.getLeastSignificantBits());
     }
 
-    public ByteBuffer insertUUID(int pos, @NotNull UUID value) {
+    public ByteBuffer insert(int pos, @NotNull UUID value) {
         writeCursor = pos;
-        return insertUUID(value);
+        return insert(value);
     }
 
     public UUID readUUID() {
@@ -847,29 +861,65 @@ public class ByteBuffer {
         return readVarLong();
     }
 
-    public ByteBuffer writeString(@NotNull String value) {
+    public ByteBuffer write(@NotNull String value, int length) {
+        writeVarInt(length);
+        write(stringToByteArrayWithFixedLength(value, length));
+        return this;
+    }
+
+    public ByteBuffer write(int pos, String value, int length) {
+        writeCursor = pos;
+        write(value, length);
+        return this;
+    }
+
+    public ByteBuffer insert(@NotNull String value, int length) {
+        insertVarInt(length);
+        insert(stringToByteArrayWithFixedLength(value, length));
+        return this;
+    }
+
+    private byte @NotNull [] stringToByteArrayWithFixedLength(@NotNull String value, int length) {
+        byte[] result = new byte[length];
+        byte[] stringBytes = value.getBytes();
+        for (int i = 0; i < length; i++) {
+            if (i > value.length()) {
+                result[i] = " ".getBytes()[0];
+                continue;
+            }
+            result[i] = stringBytes[i];
+        }
+        return result;
+    }
+
+    public ByteBuffer insert(int pos, String value, int length) {
+        writeCursor = pos;
+        return insert(value, length);
+    }
+
+    public ByteBuffer write(@NotNull String value) {
         byte[] stringBytes = value.getBytes();
         writeVarInt(stringBytes.length);
         write(stringBytes);
         return this;
     }
 
-    public ByteBuffer writeString(int pos, String value) {
+    public ByteBuffer write(int pos, String value) {
         writeCursor = pos;
-        writeString(value);
+        write(value);
         return this;
     }
 
-    public ByteBuffer insertString(@NotNull String value) {
+    public ByteBuffer insert(@NotNull String value) {
         byte[] stringBytes = value.getBytes();
         insertVarInt(stringBytes.length);
         insert(stringBytes);
         return this;
     }
 
-    public ByteBuffer insertString(int pos, String value) {
+    public ByteBuffer insert(int pos, String value) {
         writeCursor = pos;
-        return insertString(value);
+        return insert(value);
     }
 
     public String readString() {
@@ -882,20 +932,20 @@ public class ByteBuffer {
         return readString();
     }
 
-    public ByteBuffer writeJson(@NotNull JsonElement value) {
-        return writeString(value.toString());
+    public ByteBuffer write(@NotNull JsonElement value) {
+        return write(value.toString());
     }
 
-    public ByteBuffer writeJson(int pos, @NotNull JsonElement value) {
-        return writeString(pos, value.toString());
+    public ByteBuffer write(int pos, @NotNull JsonElement value) {
+        return write(pos, value.toString());
     }
 
-    public ByteBuffer insertJson(@NotNull JsonElement value) {
-        return insertString(value.toString());
+    public ByteBuffer insert(@NotNull JsonElement value) {
+        return insert(value.toString());
     }
 
-    public ByteBuffer insertJson(int pos, @NotNull JsonElement value) {
-        return insertString(pos, value.toString());
+    public ByteBuffer insert(int pos, @NotNull JsonElement value) {
+        return insert(pos, value.toString());
     }
 
     public JsonElement readJson() {
@@ -911,28 +961,28 @@ public class ByteBuffer {
         return JsonParser.parseReader(jsonReader);
     }
 
-    public ByteBuffer writeIdentifier(@NotNull Identifier value) {
-        return writeString(String.copyValueOf(value.toString().toCharArray(),
-                                              0,
-                                              Math.min(value.toString().length(), IDENTIFIER_MAX_LENGTH)
+    public ByteBuffer write(@NotNull Identifier value) {
+        return write(String.copyValueOf(value.toString().toCharArray(),
+                                        0,
+                                        Math.min(value.toString().length(), IDENTIFIER_MAX_LENGTH)
         ));
     }
 
-    public ByteBuffer writeIdentifier(int pos, @NotNull Identifier value) {
+    public ByteBuffer write(int pos, @NotNull Identifier value) {
         writeCursor = pos;
-        return writeIdentifier(value);
+        return write(value);
     }
 
-    public ByteBuffer insertIdentifier(@NotNull Identifier value) {
-        return insertString(String.copyValueOf(value.toString().toCharArray(),
-                                               0,
-                                               Math.min(value.toString().length(), IDENTIFIER_MAX_LENGTH)
+    public ByteBuffer insert(@NotNull Identifier value) {
+        return insert(String.copyValueOf(value.toString().toCharArray(),
+                                         0,
+                                         Math.min(value.toString().length(), IDENTIFIER_MAX_LENGTH)
         ));
     }
 
-    public ByteBuffer insertIdentifier(int pos, @NotNull Identifier value) {
+    public ByteBuffer insert(int pos, @NotNull Identifier value) {
         writeCursor = pos;
-        return insertIdentifier(value);
+        return insert(value);
     }
 
     public Identifier readIdentifier() {
@@ -943,22 +993,22 @@ public class ByteBuffer {
         return Identifier.of(readString(pos));
     }
 
-    public ByteBuffer writePosition(@NotNull Position value) {
-        return writeLong(((value.x() & 0x3FFFFFF) << 38) | ((value.z() & 0x3FFFFFF) << 12) | (value.y() & 0xFFF));
+    public ByteBuffer write(@NotNull Position value) {
+        return write(((value.x() & 0x3FFFFFF) << 38) | ((value.z() & 0x3FFFFFF) << 12) | (value.y() & 0xFFF));
     }
 
-    public ByteBuffer writePosition(int pos, @NotNull Position value) {
+    public ByteBuffer write(int pos, @NotNull Position value) {
         writeCursor = pos;
-        return writePosition(value);
+        return write(value);
     }
 
-    public ByteBuffer insertPosition(@NotNull Position value) {
-        return insertLong(((value.x() & 0x3FFFFFF) << 38) | ((value.z() & 0x3FFFFFF) << 12) | (value.y() & 0xFFF));
+    public ByteBuffer insert(@NotNull Position value) {
+        return insert(((value.x() & 0x3FFFFFF) << 38) | ((value.z() & 0x3FFFFFF) << 12) | (value.y() & 0xFFF));
     }
 
-    public ByteBuffer insertPosition(int pos, @NotNull Position value) {
+    public ByteBuffer insert(int pos, @NotNull Position value) {
         writeCursor = pos;
-        return insertPosition(value);
+        return insert(value);
     }
 
     public Position readPosition() {
@@ -975,9 +1025,40 @@ public class ByteBuffer {
         return readPosition();
     }
 
+    public ByteBuffer write(NBTTag NBTTag){
+        NBTTag.writePayload(this, NBTTag);
+        return this;
+    }
 
-    public ByteBuffer writeSlot(@NotNull Slot slot) {
-        writeBoolean(slot.present());
+    public ByteBuffer write(int pos, NBTTag NBTTag){
+        writeCursor = pos;
+        return write(NBTTag);
+    }
+
+    public ByteBuffer insert(NBTTag NBTTag){
+        ByteBuffer helpBuffer = new ByteBuffer();
+        NBTTag.writePayload(helpBuffer, NBTTag);
+        insert(helpBuffer);
+        return this;
+    }
+
+    public ByteBuffer insert(int pos, NBTTag NBTTag){
+        writeCursor = pos;
+        return insert(NBTTag);
+    }
+
+    public NBTTag readNBTTag(){
+        return NBTTag.readTag(this);
+    }
+
+    public NBTTag readNBTTag(int pos){
+        readCursor = pos;
+        return readNBTTag();
+    }
+
+
+    public ByteBuffer write(@NotNull Slot slot) {
+        write(slot.present());
         if (slot.present()) {
             if (slot.id() != null) {
                 writeVarInt(slot.id());
@@ -986,9 +1067,9 @@ public class ByteBuffer {
                     write(slot.count());
 
                     if (slot.nbt() == null) {
-                        Tag.writeTag(this, new EndTag());
+                        write(new EndNBTTag());
                     } else {
-                        Tag.writeTag(this, slot.nbt());
+                        write( slot.nbt());
                     }
                 }
             }
@@ -996,13 +1077,13 @@ public class ByteBuffer {
         return this;
     }
 
-    public ByteBuffer writeSlot(int pos, @NotNull Slot slot) {
+    public ByteBuffer write(int pos, @NotNull Slot slot) {
         writeCursor = pos;
-        return writeSlot(slot);
+        return write(slot);
     }
 
-    public ByteBuffer insertSlot(@NotNull Slot slot) {
-        insertBoolean(slot.present());
+    public ByteBuffer insert(@NotNull Slot slot) {
+        insert(slot.present());
         if (slot.present()) {
             if (slot.id() != null) {
                 insertVarInt(slot.id());
@@ -1010,22 +1091,20 @@ public class ByteBuffer {
                 if (slot.count() != null) {
                     insert(slot.count());
 
-                    ByteBuffer buffer = new ByteBuffer();
                     if (slot.nbt() == null) {
-                        Tag.writeTag(buffer, new EndTag());
+                        insert(new EndNBTTag());
                     } else {
-                        Tag.writeTag(buffer, slot.nbt());
+                        insert(slot.nbt());
                     }
-                    insert(buffer);
                 }
             }
         }
         return this;
     }
 
-    public ByteBuffer insertSlot(int pos, @NotNull Slot slot) {
+    public ByteBuffer insert(int pos, @NotNull Slot slot) {
         writeCursor = pos;
-        return insertSlot(slot);
+        return insert(slot);
     }
 
     public Slot readSlot() {
@@ -1035,8 +1114,8 @@ public class ByteBuffer {
         if (!hasRemaining()) return new Slot(true, id, null, null);
         byte count = read();
         if (!hasRemaining()) return new Slot(true, id, count, null);
-        Tag nbtTag = Tag.readTag(this);
-        if (nbtTag instanceof EndTag) return new Slot(true, id, count, null);
+        NBTTag nbtTag = readNBTTag();
+        if (nbtTag instanceof EndNBTTag) return new Slot(true, id, count, null);
         return new Slot(true, id, count, nbtTag);
     }
 
@@ -1047,5 +1126,44 @@ public class ByteBuffer {
 
     public int getRemaining() {
         return getSize() - (readCursor);
+    }
+
+    public ByteBuffer write(@NotNull Tag tag){
+        write(tag.name());
+        writeVarInt(tag.entries().size());
+        tag.entries().forEach(this::writeVarInt);
+        return this;
+    }
+
+    public ByteBuffer write(int pos, Tag tag){
+        writeCursor = pos;
+        return write(tag);
+    }
+
+    public ByteBuffer insert(@NotNull Tag tag){
+        insert(tag.name());
+        insertVarInt(tag.entries().size());
+        tag.entries().forEach(this::insertVarInt);
+        return this;
+    }
+
+    public ByteBuffer insert(int pos, Tag tag){
+        writeCursor = pos;
+        return insert(tag);
+    }
+
+    public Tag readTag(){
+        Identifier identifier = readIdentifier();
+        int count = readVarInt();
+        List<Integer> entries = new ArrayList<>(count);
+        for (int i = 0; i < count; i++) {
+            entries.add(readVarInt());
+        }
+        return new Tag(identifier, entries);
+    }
+
+    public Tag readTag(int pos){
+        readCursor = pos;
+        return readTag();
     }
 }

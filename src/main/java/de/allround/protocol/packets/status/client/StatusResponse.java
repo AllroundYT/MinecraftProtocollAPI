@@ -5,30 +5,20 @@ import com.google.gson.JsonObject;
 import de.allround.protocol.datatypes.ByteBuffer;
 import de.allround.protocol.packets.WritablePacket;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-public class StatusResponse implements WritablePacket {
-
-    private int maxPlayers, onlinePlayers;
-    private final Map<UUID, String> samplePlayers;
-    private String description;
-    private boolean enforcesSecureChat;
-    private boolean previewsChat;
+public record StatusResponse(int maxPlayers,
+                             int onlinePlayers,
+                             Map<UUID, String> samplePlayers,
+                             String description,
+                             boolean enforcesSecureChat,
+                             boolean previewsChat
+) implements WritablePacket {
 
 
     public StatusResponse(String description, int maxPlayers, int onlinePlayers, Map<UUID, String> samplePlayers) {
-        this.maxPlayers = maxPlayers;
-        this.onlinePlayers = onlinePlayers;
-        this.samplePlayers = samplePlayers;
-        this.description = description;
-        this.enforcesSecureChat = false;
-        this.previewsChat = false;
-    }
-
-    public StatusResponse() {
-        this.samplePlayers = new HashMap<>();
+        this(maxPlayers, onlinePlayers, samplePlayers, description, false, false);
     }
 
     @Override
@@ -53,7 +43,7 @@ public class StatusResponse implements WritablePacket {
         JsonArray sampleArray = new JsonArray();
         this.samplePlayers.forEach((uuid, s) -> {
             JsonObject jsonObject = new JsonObject();
-            jsonObject.addProperty("name",s);
+            jsonObject.addProperty("name", s);
             jsonObject.addProperty("id", uuid.toString());
             sampleArray.add(jsonObject);
         });
@@ -66,7 +56,7 @@ public class StatusResponse implements WritablePacket {
         jsonObject.addProperty("enforcesSecureChat", enforcesSecureChat);
         jsonObject.addProperty("previewsChat", previewsChat);
         System.out.println(jsonObject);
-        return new ByteBuffer().writeJson(jsonObject);
+        return new ByteBuffer().write(jsonObject);
     }
 
 }

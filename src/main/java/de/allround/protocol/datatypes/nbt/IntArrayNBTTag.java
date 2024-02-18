@@ -1,9 +1,9 @@
 package de.allround.protocol.datatypes.nbt;
 
-public final class IntArrayTag extends Tag {
+public final class IntArrayNBTTag extends NBTTag {
     private final int[] value;
 
-    public IntArrayTag(String name, int[] value) {
+    public IntArrayNBTTag(String name, int[] value) {
         super(name);
         this.value = value;
     }

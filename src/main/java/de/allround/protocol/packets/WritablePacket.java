@@ -3,8 +3,11 @@ package de.allround.protocol.packets;
 
 import de.allround.protocol.datatypes.ByteBuffer;
 
+import java.util.zip.Deflater;
+
 public interface WritablePacket extends Packet {
     ByteBuffer write();
+
 
     default ByteBuffer createBuffer() {
         ByteBuffer buffer = write();

@@ -1,9 +1,12 @@
 package de.allround.protocol;
 
+import de.allround.protocol.datatypes.ByteBuffer;
+
 public enum ConnectionState {
     HANDSHAKE,
     STATUS,
     LOGIN,
+    CONFIGURATION,
     PLAY,
     CLOSED;
 
@@ -12,7 +15,8 @@ public enum ConnectionState {
             case 0 -> HANDSHAKE;
             case 1 -> STATUS;
             case 2 -> LOGIN;
-            case 3 -> PLAY;
+            case 3 -> CONFIGURATION;
+            case 4 -> PLAY;
             default -> CLOSED;
         };
     }
