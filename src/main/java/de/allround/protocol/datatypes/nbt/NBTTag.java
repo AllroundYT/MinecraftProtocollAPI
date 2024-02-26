@@ -17,7 +17,7 @@ public abstract sealed class NBTTag permits ByteArrayNBTTag, ByteNBTTag, Compoun
     }
 
     public static @NotNull NBTTag readNamedTag(@NotNull ByteBuffer buffer) {
-        byte tagType = buffer.read();
+        byte tagType = buffer.readByte();
         if (tagType == 0) {
             return new EndNBTTag();
         } else {
@@ -27,7 +27,7 @@ public abstract sealed class NBTTag permits ByteArrayNBTTag, ByteNBTTag, Compoun
     }
 
     public static NBTTag readTag(ByteBuffer buffer) {
-        byte tagType = buffer.read();
+        byte tagType = buffer.readByte();
         if (tagType == 0) {
             return new EndNBTTag();
         } else {
@@ -105,7 +105,7 @@ public abstract sealed class NBTTag permits ByteArrayNBTTag, ByteNBTTag, Compoun
                 return new EndNBTTag();
             }
             case 1 -> {
-                return new ByteNBTTag(name, buffer.read());
+                return new ByteNBTTag(name, buffer.readByte());
             }
             case 2 -> {
                 return new ShortNBTTag(name, buffer.readShort());
@@ -130,7 +130,7 @@ public abstract sealed class NBTTag permits ByteArrayNBTTag, ByteNBTTag, Compoun
                 return new StringNBTTag(name, readString(buffer));
             }
             case 9 -> {
-                byte listTagType = buffer.read();
+                byte listTagType = buffer.readByte();
                 int listLength = buffer.readInteger();
                 List<NBTTag> list = new ArrayList<>();
                 for (int i = 0; i < listLength; i++) {

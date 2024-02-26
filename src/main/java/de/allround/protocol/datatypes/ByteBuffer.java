@@ -9,10 +9,7 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.StringReader;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * This class is used for sending data over network.
@@ -487,11 +484,11 @@ public class ByteBuffer {
         return this;
     }
 
-    public byte read() {
+    public byte readByte() {
         return bytes[readCursor++];
     }
 
-    public byte read(int pos) {
+    public byte readByte(int pos) {
         readCursor = pos;
         return bytes[readCursor++];
     }
@@ -500,7 +497,7 @@ public class ByteBuffer {
         readCursor = pos;
         byte[] array = new byte[length];
         for (int i = 0; i < length; i++) {
-            array[i] = read();
+            array[i] = readByte();
         }
         return array;
     }
@@ -521,7 +518,7 @@ public class ByteBuffer {
     public byte[] readArray(int length) {
         byte[] array = new byte[length];
         for (int i = 0; i < length; i++) {
-            array[i] = read();
+            array[i] = readByte();
         }
         return array;
     }
@@ -547,11 +544,11 @@ public class ByteBuffer {
     }
 
     public boolean readBoolean() {
-        return read() == 1;
+        return readByte() == 1;
     }
 
     public boolean readBoolean(int pos) {
-        return read(pos) == 1;
+        return readByte(pos) == 1;
     }
 
     public ByteBuffer write(short value) {
@@ -774,7 +771,7 @@ public class ByteBuffer {
         byte currentByte;
 
         while (true) {
-            currentByte = read();
+            currentByte = readByte();
             value |= (currentByte & SEGMENT_BITS) << position;
 
             if ((currentByte & CONTINUE_BIT) == 0) break;
@@ -843,7 +840,7 @@ public class ByteBuffer {
         byte currentByte;
 
         while (true) {
-            currentByte = read();
+            currentByte = readByte();
             value |= (long) (currentByte & SEGMENT_BITS) << position;
 
             if ((currentByte & CONTINUE_BIT) == 0) break;
@@ -1112,7 +1109,7 @@ public class ByteBuffer {
         if (!present) return new Slot(false, null, null, null);
         int id = readVarInt();
         if (!hasRemaining()) return new Slot(true, id, null, null);
-        byte count = read();
+        byte count = readByte();
         if (!hasRemaining()) return new Slot(true, id, count, null);
         NBTTag nbtTag = readNBTTag();
         if (nbtTag instanceof EndNBTTag) return new Slot(true, id, count, null);
@@ -1165,5 +1162,47 @@ public class ByteBuffer {
     public Tag readTag(int pos){
         readCursor = pos;
         return readTag();
+    }
+
+
+    public ByteBuffer write(@NotNull BitSet bitSet){
+        long[] longs = bitSet.toLongArray();
+        writeVarInt(longs.length);
+        for (long aLong : longs) {
+            write(aLong);
+        }
+        return this;
+    }
+
+    public ByteBuffer write(int pos, BitSet bitSet){
+        writeCursor = pos;
+        return write(bitSet);
+    }
+
+    public ByteBuffer insert(@NotNull BitSet bitSet){
+        long[] longs = bitSet.toLongArray();
+        insertVarInt(longs.length);
+        for (long aLong : longs) {
+            insert(aLong);
+        }
+        return this;
+    }
+
+    public ByteBuffer insert(int pos, BitSet bitSet){
+        writeCursor = pos;
+        return insert(bitSet);
+    }
+
+    public BitSet readBitSet(){
+        long[] longs = new long[readVarInt()];
+        for (int i = 0; i < longs.length; i++) {
+            longs[i] = readLong();
+        }
+        return BitSet.valueOf(longs);
+    }
+
+    public BitSet readBitSet(int pos){
+        readCursor = pos;
+        return readBitSet();
     }
 }

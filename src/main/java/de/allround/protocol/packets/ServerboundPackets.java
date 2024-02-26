@@ -1,24 +1,14 @@
 package de.allround.protocol.packets;
 
 import de.allround.misc.reflections.ClassAllocator;
+import de.allround.misc.reflections.ClassScanner;
 import de.allround.protocol.ConnectionState;
 import de.allround.protocol.datatypes.ByteBuffer;
-import de.allround.protocol.packets.configuration.server.*;
-import de.allround.protocol.packets.handshake.server.Handshake;
-import de.allround.protocol.packets.login.server.EncryptionResponse;
-import de.allround.protocol.packets.login.server.LoginAcknowledged;
-import de.allround.protocol.packets.login.server.LoginPluginResponse;
-import de.allround.protocol.packets.login.server.LoginStart;
-import de.allround.protocol.packets.status.client.PingResponse;
-import de.allround.protocol.packets.status.client.StatusResponse;
-import de.allround.protocol.packets.status.server.PingRequest;
-import de.allround.protocol.packets.status.server.StatusRequest;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Supplier;
 
 
 public class ServerboundPackets {
@@ -31,18 +21,16 @@ public class ServerboundPackets {
     private static final Map<Integer, ReadablePacket> PLAY = new HashMap<>();
 
     static {
-        //todo: add methode durch die angabe eines packets austauschen aus dem dann alle ReadablePacket klassen geladen werden
-        // scanner nutzen!
-        add(ConnectionState.HANDSHAKE, Handshake.class);
-        add(ConnectionState.STATUS, StatusRequest.class, PingRequest.class);
-        add(ConnectionState.LOGIN, EncryptionResponse.class, LoginAcknowledged.class, LoginPluginResponse.class, LoginStart.class);
-        add(ConnectionState.CONFIGURATION, ClientInformation.class, FinishConfiguration.class, KeepAlive.class, PluginMessage.class, Pong.class, ResourcePackResponse.class);
-        add(ConnectionState.PLAY);
+        add(ConnectionState.HANDSHAKE, "de.allround.protocol.packets.handshake.server");
+        add(ConnectionState.STATUS, "de.allround.protocol.packets.status.server");
+        add(ConnectionState.LOGIN, "de.allround.protocol.packets.login.server");
+        add(ConnectionState.CONFIGURATION, "de.allround.protocol.packets.configuration.server");
+        add(ConnectionState.PLAY, "de.allround.protocol.packets.play.server");
     }
 
     @SafeVarargs
-    private static void add(@NotNull ConnectionState connectionState, Class<? extends ReadablePacket>... packets){
-        Map<Integer, ReadablePacket> packetMap = switch (connectionState){
+    private static void add(@NotNull ConnectionState connectionState, Class<? extends ReadablePacket>... packets) {
+        Map<Integer, ReadablePacket> packetMap = switch (connectionState) {
             case HANDSHAKE -> HANDSHAKE;
             case STATUS -> STATUS;
             case LOGIN -> LOGIN;
@@ -55,6 +43,30 @@ public class ServerboundPackets {
             ReadablePacket packet = ClassAllocator.allocate(packetClass);
             if (packet == null) continue;
             packetMap.put(packet.getID(), packet);
+        }
+    }
+
+    private static void add(@NotNull ConnectionState connectionState, String packageName) {
+        Map<Integer, ReadablePacket> packetMap = switch (connectionState) {
+            case HANDSHAKE -> HANDSHAKE;
+            case STATUS -> STATUS;
+            case LOGIN -> LOGIN;
+            case CONFIGURATION -> CONFIGURATION;
+            case PLAY -> PLAY;
+            default -> Collections.emptyMap();
+        };
+
+        try {
+            ClassScanner.of(ReadablePacket.class.getClassLoader(), packageName)
+                        .criteria(ReadablePacket.class::isAssignableFrom)
+                        .scan()
+                        .forEach(clazz -> {
+                            ReadablePacket packet = (ReadablePacket) ClassAllocator.allocate(clazz);
+                            if (packet == null) return;
+                            packetMap.put(packet.getID(), packet);
+                        });
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 

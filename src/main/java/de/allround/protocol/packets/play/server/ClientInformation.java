@@ -1,4 +1,4 @@
-package de.allround.protocol.packets.configuration.server;
+package de.allround.protocol.packets.play.server;
 
 import de.allround.protocol.datatypes.ByteBuffer;
 import de.allround.protocol.packets.ReadablePacket;
@@ -14,9 +14,10 @@ public record ClientInformation(String locale,
                                 boolean enableTextFiltering,
                                 boolean allowServerListing
 ) implements ReadablePacket {
+
     @Override
     public int getID() {
-        return 0x00;
+        return 0x09;
     }
 
     @Contract("_ -> new")
